@@ -1,4 +1,4 @@
-export interface ProductProps {
+export interface ProductResponse {
   id: number;
   thumbnail: string;
   title: string;

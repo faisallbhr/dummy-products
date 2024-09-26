@@ -1,13 +1,13 @@
 import { ENDPOINTS } from "@/constants/api";
 import { axiosInstance } from "@/lib/axios";
-import { ProductProps } from "@/types/products";
+import { ProductResponse } from "@/types/response/product";
 import { useQuery } from "@tanstack/react-query";
 
 export const useFetchProducts = () => {
-  return useQuery<ProductProps[], Error>({
+  return useQuery<ProductResponse[], Error>({
     queryKey: ["products"],
     queryFn: async () => {
-      const response = await axiosInstance.get<{ products: ProductProps[] }>(
+      const response = await axiosInstance.get<{ products: ProductResponse[] }>(
         ENDPOINTS.PRODUCTS.GET
       );
       return response.data.products;
