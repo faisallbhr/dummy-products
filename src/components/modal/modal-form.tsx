@@ -18,6 +18,7 @@ import { useCreateProduct } from "@/features/products/useCreateProduct";
 import { UseFormReturn } from "react-hook-form";
 import { formSchema } from "@/lib/form-schema";
 import { useToast } from "@/hooks/use-toast";
+import Image from "next/image";
 
 interface ModalFormProps {
   isOpen: boolean;
@@ -123,10 +124,12 @@ export default function ModalForm({
               <FormControl>
                 <div>
                   {field.value ? (
-                    <img
+                    <Image
                       src={URL.createObjectURL(field.value)}
                       alt="Preview"
-                      className="w-32 h-32 mb-2"
+                      width={100}
+                      height={100}
+                      className="mb-2"
                     />
                   ) : (
                     <></>

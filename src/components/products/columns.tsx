@@ -21,6 +21,90 @@ import { useState } from "react";
 import { DeleteDialog } from "../dialog";
 import { useToast } from "@/hooks/use-toast";
 
+const ActionCell = ({ row }: any) => {
+  const { setIsOpen } = useModalStore();
+  const { setFormData } = useFormStore();
+  const { setIsEdit } = useEditStore();
+  const { toast } = useToast();
+  const [isDeleteDialog, setIsDeleteDialog] = useState(false);
+
+  const queryClient = useQueryClient();
+  const { mutate: deleteProduct, isPending: isDeleting } = useDeleteProduct({
+    onSuccess: (response: AxiosResponse) => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      setIsDeleteDialog(false);
+
+      toast({
+        title: "Success",
+        description: "Successfully deleted a product.",
+      });
+
+      console.log("isDeleted:", response.data.isDeleted);
+      console.log("status:", response.status);
+      console.log("statusText:", response.statusText);
+      console.log("data:", response.data);
+    },
+    onError: (error: AxiosError) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+
+      console.log("code:", error.code);
+      console.log("message:", error.message);
+    },
+  });
+
+  const handleEdit = () => {
+    setIsEdit(true);
+    const rowData = row.original;
+    setFormData({
+      id: rowData.id,
+      title: rowData.title,
+      category: rowData.category,
+      price: rowData.price,
+    });
+    setIsOpen(true);
+  };
+
+  const handleDelete = () => {
+    const rowData = row.original;
+    deleteProduct(rowData.id);
+  };
+
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" className="h-8 w-8 p-0">
+            <span className="sr-only">Open menu</span>
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={handleEdit} className="cursor-pointer">
+            Edit
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => setIsDeleteDialog(true)}
+            className="cursor-pointer">
+            Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <DeleteDialog
+        isDeleteDialog={isDeleteDialog}
+        setIsDeleteDialog={setIsDeleteDialog}
+        handleDelete={handleDelete}
+        isDeleting={isDeleting}
+      />
+    </>
+  );
+};
+
 export const columns: ColumnDef<ProductResponse>[] = [
   {
     accessorKey: "id",
@@ -71,91 +155,6 @@ export const columns: ColumnDef<ProductResponse>[] = [
     accessorKey: "actions",
     header: "Actions",
     enableHiding: false,
-    cell: ({ row }) => {
-      const { setIsOpen } = useModalStore();
-      const { setFormData } = useFormStore();
-      const { setIsEdit } = useEditStore();
-      const { toast } = useToast();
-      const [isDeleteDialog, setIsDeleteDialog] = useState(false);
-
-      const queryClient = useQueryClient();
-      const { mutate: deleteProduct, isPending: isDeleting } = useDeleteProduct(
-        {
-          onSuccess: (response: AxiosResponse) => {
-            queryClient.invalidateQueries({ queryKey: ["products"] });
-            setIsDeleteDialog(false);
-
-            toast({
-              title: "Success",
-              description: "Successfully delete a product.",
-            });
-
-            console.log("isDeleted:", response.data.isDeleted);
-            console.log("status:", response.status);
-            console.log("statusText:", response.statusText);
-            console.log("data:", response.data);
-          },
-          onError: (error: AxiosError) => {
-            toast({
-              title: "Error",
-              description: error.message,
-              variant: "destructive",
-            });
-
-            console.log("code:", error.code);
-            console.log("message:", error.message);
-          },
-        }
-      );
-
-      const handleEdit = () => {
-        setIsEdit(true);
-
-        const rowData = row.original;
-        setFormData({
-          id: rowData.id,
-          title: rowData.title,
-          category: rowData.category,
-          price: rowData.price,
-        });
-
-        setIsOpen(true);
-      };
-
-      const handleDelete = () => {
-        const rowData = row.original;
-        deleteProduct(rowData.id);
-      };
-      return (
-        <>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleEdit} className="cursor-pointer">
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => setIsDeleteDialog(true)}
-                className="cursor-pointer">
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <DeleteDialog
-            isDeleteDialog={isDeleteDialog}
-            setIsDeleteDialog={setIsDeleteDialog}
-            handleDelete={handleDelete}
-            isDeleting={isDeleting}
-          />
-        </>
-      );
-    },
+    cell: ({ row }) => <ActionCell row={row} />,
   },
 ];
