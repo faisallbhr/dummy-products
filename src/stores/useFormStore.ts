@@ -3,16 +3,24 @@ import { create } from "zustand";
 
 interface FormStore {
   formData: ProductRequest;
-  setFormData: (data: ProductRequest) => void;
+  setFormData: (data: Partial<ProductRequest>) => void;
 }
 
+const defaultValues: ProductRequest = {
+  id: 0,
+  thumbnail: undefined,
+  title: "",
+  category: "",
+  price: 0,
+};
+
 export const useFormStore = create<FormStore>()((set) => ({
-  formData: {
-    id: 0,
-    thumbnail: undefined,
-    title: "",
-    category: "",
-    price: 0,
-  },
-  setFormData: (data: ProductRequest) => set({ formData: { ...data } }),
+  formData: defaultValues,
+  setFormData: (data: Partial<ProductRequest>) =>
+    set(() => ({
+      formData:
+        Object.keys(data).length === 0
+          ? defaultValues
+          : { ...defaultValues, ...data },
+    })),
 }));

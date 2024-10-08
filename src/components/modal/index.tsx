@@ -16,25 +16,38 @@ import { useFormStore } from "@/stores/useFormStore";
 import { useEditStore } from "@/stores/useEditStore";
 import ModalForm from "./modal-form";
 import { formSchema } from "@/lib/form-schema";
+import { useEffect } from "react";
+import { DialogDescription } from "@radix-ui/react-dialog";
 
 export default function Modal() {
   const { isOpen, setIsOpen } = useModalStore();
   const { isEdit, setIsEdit } = useEditStore();
-  const { formData } = useFormStore();
+  const { formData, setFormData } = useFormStore();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: formData,
   });
 
+  useEffect(() => {
+    form.reset(formData);
+  }, [form, formData]);
+
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open);
+    if (!open) {
+      setIsEdit(false);
+      setFormData({});
+    }
+  };
   return (
     <div>
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <Dialog open={isOpen} onOpenChange={handleOpenChange}>
         <DialogTrigger asChild>
           <Button
             onClick={() => {
               setIsEdit(false);
-              form.reset();
+              setFormData({});
               setIsOpen(true);
             }}>
             Add Product

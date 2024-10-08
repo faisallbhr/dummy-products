@@ -33,7 +33,7 @@ export default function ModalForm({
   isEdit,
   form,
 }: ModalFormProps) {
-  const { formData } = useFormStore();
+  const { formData, setFormData } = useFormStore();
 
   useEffect(() => {
     if (isOpen) {
@@ -44,65 +44,43 @@ export default function ModalForm({
   const { toast } = useToast();
 
   const queryClient = useQueryClient();
+
+  const handleSuccess = (response: AxiosResponse) => {
+    queryClient.invalidateQueries({
+      queryKey: ["products"],
+    });
+
+    setFormData({});
+    setIsOpen(false);
+
+    toast({
+      title: "Success",
+      description: `Successfully ${isEdit ? "edited" : "added"} a product.`,
+    });
+
+    console.log("status: ", response.status);
+    console.log("statusText: ", response.statusText);
+    console.log("data: ", response.data);
+  };
+
+  const handleError = (error: AxiosError) => {
+    toast({
+      title: "Error",
+      description: error.message,
+      variant: "destructive",
+    });
+    console.log("code: ", error.code);
+    console.log("message: ", error.message);
+  };
+
   const { mutate: createProduct, isPending: isCreating } = useCreateProduct({
-    onSuccess: (response: AxiosResponse) => {
-      queryClient.invalidateQueries({
-        queryKey: ["products"],
-      });
-
-      form.reset();
-
-      toast({
-        title: "Success",
-        description: "Successfully added a product.",
-      });
-
-      console.log("status: ", response.status);
-      console.log("statusText: ", response.statusText);
-      console.log("data: ", response.data);
-
-      setIsOpen(false);
-    },
-    onError: (error: AxiosError) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-
-      console.log("code: ", error.code);
-      console.log("message: ", error.message);
-    },
+    onSuccess: handleSuccess,
+    onError: handleError,
   });
 
   const { mutate: editProduct, isPending: isEditing } = useEditProduct({
-    onSuccess: (response: AxiosResponse) => {
-      queryClient.invalidateQueries({
-        queryKey: ["products"],
-      });
-
-      form.reset();
-
-      toast({
-        title: "Success",
-        description: "Successfully edit the product.",
-      });
-
-      console.log("status: ", response.status);
-      console.log("statusText: ", response.statusText);
-      console.log("data: ", response.data);
-
-      setIsOpen(false);
-    },
-    onError: (error: AxiosError) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-      console.log("code: ", error.code);
-      console.log("message: ", error.message);
-    },
+    onSuccess: handleSuccess,
+    onError: handleError,
   });
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
@@ -225,7 +203,10 @@ export default function ModalForm({
             variant="outline"
             type="button"
             disabled={isCreating || isEditing}
-            onClick={() => setIsOpen(false)}>
+            onClick={() => {
+              setFormData({});
+              setIsOpen(false);
+            }}>
             Cancel
           </Button>
           <Button type="submit" disabled={isCreating || isEditing}>
